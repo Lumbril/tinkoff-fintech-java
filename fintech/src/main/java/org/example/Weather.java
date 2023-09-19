@@ -19,11 +19,11 @@ public class Weather {
 
     @Override
     public String toString() {
-        return "[" +
+        return "{" +
                 id + ", " +
                 regionName + ", " +
                 temperature + ", " +
                 date +
-                "]";
+                "}";
     }
 }
