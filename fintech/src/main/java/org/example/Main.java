@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -25,7 +26,7 @@ public class Main {
                 weathers.add(new Weather(
                         (long) (j + 1),
                         regions[j],
-                        random.nextInt(-30, 30),
+                        random.nextDouble(-30, 30),
                         LocalDateTime.now()
                 ));
             }
@@ -34,27 +35,31 @@ public class Main {
         return weathers;
     }
 
-    public static Map<String, Double> getAvgTempInRegions(ArrayList<Weather> weathers) {
+    public static Map<String, Double> getAvgTempInRegions(List<Weather> weathers) {
         return weathers.stream()
                 .collect(Collectors.groupingBy(Weather::getRegionName,
                         Collectors.averagingDouble(Weather::getTemperature)));
     }
 
-    public static List<Weather> filterRegionsTempHigh(ArrayList<Weather> weathers, int temp) {
+    public static List<String> filterRegionsTempHigh(List<Weather> weathers, int temp) {
         return weathers.stream()
                 .filter(weather -> weather.getTemperature() > temp)
-                .collect(Collectors.toList());
+                .map(region -> region.getRegionName())
+                .toList();
     }
 
-    public static Map<Long, List<Integer>> getTempsInRegions(ArrayList<Weather> weathers) {
+    public static Map<Long, List<Double>> getTempsInRegions(List<Weather> weathers) {
         return weathers.stream()
                 .collect(Collectors.groupingBy(Weather::getId,
                         Collectors.mapping(Weather::getTemperature, Collectors.toList())));
     }
 
-    public static Map<Integer, List<Weather>> getRegionsGroupedByTemp(ArrayList<Weather> weathers) {
+    public static Map<Integer, List<Weather>> getRegionsGroupedByTemp(List<Weather> weathers) {
+        Function<Weather, Double> getTemp = Weather::getTemperature;
+        Function<Weather, Integer> getIntTemp = getTemp.andThen(Double::intValue);
+
         return weathers.stream()
-                .collect(Collectors.groupingBy(Weather::getTemperature));
+                .collect(Collectors.groupingBy(getIntTemp));
     }
 
     public static void main(String[] args) {
@@ -73,17 +78,17 @@ public class Main {
         }
 
         int tempForFilter = 10;
-        List<Weather> regionsTempHigh = filterRegionsTempHigh(weathers, tempForFilter);
+        List<String> regionsTempHigh = filterRegionsTempHigh(weathers, tempForFilter);
 
         System.out.println("Regions where the temperature is higher than " + tempForFilter + ":");
-        for (Weather weather : regionsTempHigh) {
-            System.out.println("\t" + weather.toString());
+        for (String region : regionsTempHigh) {
+            System.out.println("\t" + region.toString());
         }
 
-        Map<Long, List<Integer>> tempsInRegions = getTempsInRegions(weathers);
+        Map<Long, List<Double>> tempsInRegions = getTempsInRegions(weathers);
 
         System.out.println("Lists of temperatures by region");
-        for (Entry<Long, List<Integer>> entry : tempsInRegions.entrySet()) {
+        for (Entry<Long, List<Double>> entry : tempsInRegions.entrySet()) {
             System.out.println("\t" + entry.getKey() + ": " + entry.getValue());
         }
 

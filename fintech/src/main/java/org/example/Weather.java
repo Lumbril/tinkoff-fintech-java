@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class Weather {
     private Long id;
     private String regionName;
-    private Integer temperature;
+    private Double temperature;
     private LocalDateTime date;
 
     @Override
