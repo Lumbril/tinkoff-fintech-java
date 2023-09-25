@@ -45,6 +45,7 @@ public class Main {
         return weathers.stream()
                 .filter(weather -> weather.getTemperature() > temp)
                 .map(region -> region.getRegionName())
+                .distinct()
                 .toList();
     }
 
