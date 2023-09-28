@@ -7,10 +7,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.Weather;
+import org.example.dto.request.WeatherRequest;
 import org.example.dto.response.ErrorResponse;
+import org.example.dto.response.WeatherResponse;
 import org.example.dto.response.WeatherTemperatureResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,11 +27,12 @@ import java.util.NoSuchElementException;
 @RestController
 @RequestMapping("/api/weather")
 public class WeatherController {
+    public static Long lastId = 1L;
     public static List<Weather> weatherList = new ArrayList<>();
 
     public WeatherController() {
         WeatherController.weatherList.add(new Weather(
-                1L,
+                lastId++,
                 "Казань",
                 20.,
                 LocalDateTime.now()
@@ -67,14 +72,77 @@ public class WeatherController {
         );
     }
 
+    @Operation(summary = "Создать новый город")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = WeatherResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    }
+            )
+    })
     @PostMapping(value = "/{city}")
-    public ResponseEntity<?> doPost(@PathVariable String city) {
+    public ResponseEntity<?> doPost(@PathVariable String city,
+                                    @Validated @RequestBody WeatherRequest weatherRequest) {
+        Weather weather = new Weather(lastId++, city, weatherRequest.getTemperature(), weatherRequest.getDate());
+        weatherList.add(weather);
 
+        return ResponseEntity.ok().body(
+                new WeatherResponse(weather)
+        );
     }
 
+    @Operation(summary = "Обновить температуру в городе или создать новую запись")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = WeatherResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    }
+            )
+    })
     @PutMapping(value = "/{city}")
-    public ResponseEntity<?> doPut(@PathVariable String city) {
+    public ResponseEntity<?> doPut(@PathVariable String city,
+                                   @Validated @RequestBody WeatherRequest weatherRequest) {
+        Weather weather = weatherList.stream()
+                .filter(w -> w.getRegionName().equals(city))
+                .filter(w -> w.getDate().toLocalDate().equals(weatherRequest.getDate().toLocalDate()))
+                .findFirst().orElse(null);
 
+        if (weather == null) {
+            weather = new Weather(lastId++, city, weatherRequest.getTemperature(), weatherRequest.getDate());
+            weatherList.add(weather);
+        } else {
+            weather.setTemperature(weatherRequest.getTemperature());
+        }
+
+        return ResponseEntity.ok().body(
+                new WeatherResponse(weather)
+        );
     }
 
     @Operation(summary = "Удалить город")
@@ -114,6 +182,15 @@ public class WeatherController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ErrorResponse.builder()
                         .error(e.getMessage())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestValue(MethodArgumentNotValidException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse.builder()
+                        .error("Ошибка валидации")
                         .build()
         );
     }
