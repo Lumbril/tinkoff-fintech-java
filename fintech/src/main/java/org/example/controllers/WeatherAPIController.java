@@ -1,8 +1,19 @@
 package org.example.controllers;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.dto.response.ErrorResponse;
+import org.example.dto.response.WeatherTemperatureResponse;
 import org.example.exceptions.WeatherAPIExceptions;
 import org.example.services.WeatherAPIService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +43,61 @@ public class WeatherAPIController {
     private WeatherAPIService weatherAPIService;
 
     @Operation(summary = "Получить погоду от сервиса WeatherAPI")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = WeatherTemperatureResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    }
+            )
+    })
     @GetMapping("/current.json")
     public ResponseEntity<?> doGet(@RequestParam String city) {
-        return weatherAPIService.get(city);
+        ResponseEntity<?> responseFromWeatherApi = weatherAPIService.get(city);
+        String jsonStr = (String) responseFromWeatherApi.getBody();
+        ObjectMapper mapper = new ObjectMapper();
+        WeatherTemperatureResponse response;
+
+        try {
+            JsonNode jsonNode = mapper.readTree(jsonStr);
+            response = WeatherTemperatureResponse.builder()
+                    .temperature(Double.valueOf(String.valueOf(jsonNode.get("current").get("temp_c"))))
+                    .build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return ResponseEntity.ok().body(response);
     }
 
     @ExceptionHandler(WeatherAPIExceptions.class)
@@ -69,6 +133,26 @@ public class WeatherAPIController {
                 .body(
                         ErrorResponse.builder()
                                 .error("Неизвестная ошибка")
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<?> handle(RequestNotPermitted permitted) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(
+                        ErrorResponse.builder()
+                                .error("Превышено число запросов")
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handle(RuntimeException exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                        ErrorResponse.builder()
+                                .error("Внутренняя ошибка сервера")
                                 .build()
                 );
     }
