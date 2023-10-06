@@ -1,5 +1,7 @@
 package org.example.services;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import org.example.dto.ErrorResponseWeatherAPI;
 import org.example.exceptions.WeatherAPIExceptions;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,8 +18,12 @@ public class WeatherAPIService {
 
     private WebClient weatherWebClient;
 
-    public WeatherAPIService(@Qualifier("weatherapi") WebClient webClient) {
+    private RateLimiter rateLimiter;
+
+    public WeatherAPIService(@Qualifier("weatherapi") WebClient webClient,
+                             @Qualifier("ratelimiter_weatherapi") RateLimiter rateLimiter) {
         this.weatherWebClient = webClient;
+        this.rateLimiter = rateLimiter;
     }
 
     public ResponseEntity<?> get(String city) {
@@ -42,6 +48,7 @@ public class WeatherAPIService {
                                 )
                 )
                 .toEntity(String.class)
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
                 .block();
 
         return response;
