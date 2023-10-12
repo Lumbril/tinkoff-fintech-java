@@ -1,0 +1,33 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                                       https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+    <changeSet id="create-weather-type" author="Vitaliy">
+        <createTable tableName="weather_type">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    
+    <changeSet id="added-weather-type" author="Vitaliy">
+        <insert tableName="weather_type">
+            <column name="type" value="Ясно"/>
+        </insert>
+        <insert tableName="weather_type">
+            <column name="type" value="Облачно"/>
+        </insert>
+        <insert tableName="weather_type">
+            <column name="type" value="Пасмурно"/>
+        </insert>
+        <insert tableName="weather_type">
+            <column name="type" value="Туман"/>
+        </insert>
+        <insert tableName="weather_type">
+            <column name="type" value="Снег"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
