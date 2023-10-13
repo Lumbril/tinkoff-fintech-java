@@ -3,9 +3,10 @@ package org.example;
 import org.example.entities.City;
 import org.example.entities.Weather;
 import org.example.entities.WeatherType;
-import org.example.services.impl.CityServiceImpl;
-import org.example.services.impl.WeatherServiceImpl;
-import org.example.services.impl.WeatherTypeServiceImpl;
+import org.example.services.CityService;
+import org.example.services.WeatherService;
+import org.example.services.WeatherTypeService;
+import org.example.services.impl.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,18 +20,31 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    @Bean
+    //@Bean
     public CommandLineRunner testJpa(WeatherTypeServiceImpl weatherTypeService,
                                      CityServiceImpl cityService,
                                      WeatherServiceImpl weatherService) {
         return args -> {
+            System.out.println("TESTING JPA\n");
             testWeatherType(weatherTypeService);
             testCity(cityService);
             testWeather(weatherService, weatherTypeService, cityService);
         };
     }
 
-    private void testWeatherType(WeatherTypeServiceImpl weatherTypeService) {
+    @Bean
+    public CommandLineRunner testJdbc(WeatherTypeJdbcServiceImpl weatherTypeService,
+                                      CityJdbcServiceImpl cityService,
+                                      WeatherJdbcServiceImpl weatherService) {
+        return args -> {
+            System.out.println("TESTING JDBC\n");
+            testWeatherType(weatherTypeService);
+            testCity(cityService);
+            testWeather(weatherService, weatherTypeService, cityService);
+        };
+    }
+
+    private void testWeatherType(WeatherTypeService weatherTypeService) {
         System.out.println("WEATHER TYPES");
         System.out.println(weatherTypeService.create(
                 WeatherType.builder()
@@ -48,7 +62,7 @@ public class Application {
         System.out.println(weatherTypeService.getAll());
     }
 
-    private void testCity(CityServiceImpl cityService) {
+    private void testCity(CityService cityService) {
         System.out.println("\nCITIES");
         System.out.println(cityService.create(
                 City.builder()
@@ -76,9 +90,9 @@ public class Application {
         System.out.println(cityService.getAll());
     }
 
-    private void testWeather(WeatherServiceImpl weatherService,
-                             WeatherTypeServiceImpl weatherTypeService,
-                             CityServiceImpl cityService) {
+    private void testWeather(WeatherService weatherService,
+                             WeatherTypeService weatherTypeService,
+                             CityService cityService) {
         System.out.println("\nWEATHERS");
         System.out.println(weatherService.create(
                 Weather.builder()

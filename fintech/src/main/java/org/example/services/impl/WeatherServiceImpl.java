@@ -1,6 +1,5 @@
 package org.example.services.impl;
 
-import org.example.entities.City;
 import org.example.entities.Weather;
 import org.example.repositories.WeatherRepository;
 import org.example.services.WeatherService;
