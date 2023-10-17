@@ -39,8 +39,11 @@ public class WeatherAPIController {
             List.of(1006)
     );
 
-    @Autowired
     private WeatherAPIService weatherAPIService;
+
+    public WeatherAPIController(WeatherAPIService weatherAPIService) {
+        this.weatherAPIService = weatherAPIService;
+    }
 
     @Operation(summary = "Получить погоду от сервиса WeatherAPI")
     @ApiResponses(value = {

@@ -21,7 +21,7 @@ public class WeatherAPIService {
     private RateLimiter rateLimiter;
 
     public WeatherAPIService(@Qualifier("weatherapi") WebClient webClient,
-                             @Qualifier("ratelimiter_weatherapi") RateLimiter rateLimiter) {
+                             @Qualifier("ratelimiterWeatherapi") RateLimiter rateLimiter) {
         this.weatherWebClient = webClient;
         this.rateLimiter = rateLimiter;
     }
