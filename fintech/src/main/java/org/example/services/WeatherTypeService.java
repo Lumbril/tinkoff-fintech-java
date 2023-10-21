@@ -7,6 +7,7 @@ import java.util.List;
 public interface WeatherTypeService {
     WeatherType create(WeatherType weatherType);
     WeatherType getById(Long id);
+    WeatherType getByType(String type);
     List<WeatherType> getAll();
     WeatherType update(WeatherType weatherType);
     void delete(Long id);

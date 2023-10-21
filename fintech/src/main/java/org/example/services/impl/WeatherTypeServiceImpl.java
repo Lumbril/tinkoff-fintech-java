@@ -26,6 +26,11 @@ public class WeatherTypeServiceImpl implements WeatherTypeService {
     }
 
     @Override
+    public WeatherType getByType(String type) {
+        return weatherTypeRepository.findByType(type).orElse(null);
+    }
+
+    @Override
     public List<WeatherType> getAll() {
         List<WeatherType> weatherTypes = new LinkedList<>();
         Iterable<WeatherType> iterable = weatherTypeRepository.findAll();

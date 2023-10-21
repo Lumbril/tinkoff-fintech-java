@@ -53,6 +53,17 @@ public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
     }
 
     @Override
+    public WeatherType getByType(String type) {
+        WeatherType weatherType = jdbcTemplate.queryForObject(
+                "SELECT * FROM weather_type WHERE type = (?)",
+                new Object[]{type},
+                (rs, rowNum) -> getWeatherType(rs)
+        );
+
+        return weatherType;
+    }
+
+    @Override
     public List<WeatherType> getAll() {
         List<WeatherType> weatherTypes = jdbcTemplate.query(
                 "SELECT * FROM weather_type",
