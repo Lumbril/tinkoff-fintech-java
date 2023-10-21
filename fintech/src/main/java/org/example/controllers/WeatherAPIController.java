@@ -1,10 +1,8 @@
 package org.example.controllers;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,33 +12,28 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.dto.response.ErrorResponse;
 import org.example.dto.response.WeatherTemperatureResponse;
+import org.example.exceptions.JsonException;
 import org.example.exceptions.WeatherAPIExceptions;
 import org.example.services.WeatherAPIService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Tag(name = "WeaterAPI", description = "API for remote service WeatherAPI")
 @RestController
 @RequestMapping("/v1")
 public class WeatherAPIController {
-    private final ArrayList<Integer> errorsFor500 = new ArrayList<>(
-            List.of(1002, 1003, 2006, 2008)
-    );
-    private final ArrayList<Integer> errorsFor503 = new ArrayList<>(
-            List.of(1005, 2007, 2009)
-    );
-    private final ArrayList<Integer> errorsFor400 = new ArrayList<>(
-            List.of(1006)
-    );
+    private final List<Integer> errorsFor500 = List.of(1002, 1003, 2006, 2008);
+    private final List<Integer> errorsFor503 = List.of(1005, 2007, 2009);
+    private final List<Integer> errorsFor400 = List.of(1006);
 
-    @Autowired
     private WeatherAPIService weatherAPIService;
+
+    public WeatherAPIController(WeatherAPIService weatherAPIService) {
+        this.weatherAPIService = weatherAPIService;
+    }
 
     @Operation(summary = "Получить погоду от сервиса WeatherAPI")
     @ApiResponses(value = {
@@ -83,19 +76,7 @@ public class WeatherAPIController {
     })
     @GetMapping("/current.json")
     public ResponseEntity<?> doGet(@RequestParam String city) {
-        ResponseEntity<?> responseFromWeatherApi = weatherAPIService.get(city);
-        String jsonStr = (String) responseFromWeatherApi.getBody();
-        ObjectMapper mapper = new ObjectMapper();
-        WeatherTemperatureResponse response;
-
-        try {
-            JsonNode jsonNode = mapper.readTree(jsonStr);
-            response = WeatherTemperatureResponse.builder()
-                    .temperature(Double.valueOf(String.valueOf(jsonNode.get("current").get("temp_c"))))
-                    .build();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        WeatherTemperatureResponse response = weatherAPIService.get(city);
 
         return ResponseEntity.ok().body(response);
     }
@@ -129,7 +110,7 @@ public class WeatherAPIController {
                     );
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                         ErrorResponse.builder()
                                 .error("Неизвестная ошибка")
@@ -147,12 +128,12 @@ public class WeatherAPIController {
                 );
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handle(RuntimeException exception) {
+    @ExceptionHandler(JsonException.class)
+    public ResponseEntity<?> handle(JsonException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                         ErrorResponse.builder()
-                                .error("Внутренняя ошибка сервера")
+                                .error("Внутренняя ошибка сервера: " + exception.getMessage())
                                 .build()
                 );
     }
