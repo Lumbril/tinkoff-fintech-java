@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -62,6 +63,14 @@ public class CityJdbcServiceImpl implements CityService {
         );
 
         return c;
+    }
+
+    // Этот метод не используется
+    @Override
+    public City getByCityOrCreate(String city) {
+        City c = getByCity(city);
+
+        return c != null ? c : create(City.builder().city(city).build());
     }
 
     @Override

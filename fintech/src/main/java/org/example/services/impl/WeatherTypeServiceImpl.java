@@ -30,6 +30,14 @@ public class WeatherTypeServiceImpl implements WeatherTypeService {
         return weatherTypeRepository.findByType(type).orElse(null);
     }
 
+    // метод не используется
+    @Override
+    public WeatherType getByTypeOrCreate(String type) {
+        WeatherType wt = getByType(type);
+
+        return wt != null ? wt : create(WeatherType.builder().type(type).build());
+    }
+
     @Override
     public List<WeatherType> getAll() {
         List<WeatherType> weatherTypes = new LinkedList<>();

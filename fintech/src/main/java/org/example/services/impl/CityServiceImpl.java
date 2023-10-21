@@ -5,6 +5,8 @@ import org.example.repositories.CityRepository;
 import org.example.services.CityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +30,14 @@ public class CityServiceImpl implements CityService {
     @Override
     public City getByCity(String city) {
         return cityRepository.findCityByCity(city).orElse(null);
+    }
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Override
+    public City getByCityOrCreate(String city) {
+        City c = getByCity(city);
+
+        return c != null ? c : create(City.builder().city(city).build());
     }
 
     @Override

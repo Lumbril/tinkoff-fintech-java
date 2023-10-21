@@ -8,6 +8,7 @@ public interface CityService {
     City create(City city);
     City getById(Long id);
     City getByCity(String city);
+    City getByCityOrCreate(String city);
     List<City> getAll();
     City update(City city);
     void delete(Long id);

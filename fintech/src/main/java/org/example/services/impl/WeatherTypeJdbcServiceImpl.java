@@ -1,13 +1,15 @@
 package org.example.services.impl;
 
 import org.example.entities.WeatherType;
+import org.example.exceptions.TransactionException;
 import org.example.services.WeatherTypeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,8 +18,15 @@ import java.util.List;
 
 @Service
 public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    private TransactionTemplate transactionTemplate;
+
+    public WeatherTypeJdbcServiceImpl(JdbcTemplate jdbcTemplate,
+                                      TransactionTemplate transactionTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.transactionTemplate = transactionTemplate;
+    }
 
     @Override
     public WeatherType create(WeatherType weatherType) {
@@ -61,6 +70,23 @@ public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
         );
 
         return weatherType;
+    }
+
+    @Override
+    public WeatherType getByTypeOrCreate(String type) {
+        transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+
+        return transactionTemplate.execute(status -> {
+            try {
+                WeatherType wt = getByType(type);
+
+                return wt != null ? wt : WeatherType.builder().type(type).build();
+            } catch (Exception e) {
+                status.setRollbackOnly();
+
+                throw new TransactionException(e.getMessage());
+            }
+        });
     }
 
     @Override
