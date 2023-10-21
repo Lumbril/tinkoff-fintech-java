@@ -26,6 +26,11 @@ public class CityServiceImpl implements CityService {
     }
 
     @Override
+    public City getByCity(String city) {
+        return cityRepository.findCityByCity(city).orElse(null);
+    }
+
+    @Override
     public List<City> getAll() {
         List<City> cities = new LinkedList<>();
         Iterable<City> iterable = cityRepository.findAll();

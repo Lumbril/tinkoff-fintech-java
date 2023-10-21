@@ -54,6 +54,17 @@ public class CityJdbcServiceImpl implements CityService {
     }
 
     @Override
+    public City getByCity(String city) {
+        City c = jdbcTemplate.queryForObject(
+                "SELECT * FROM city WHERE city = (?)",
+                new Object[]{city},
+                (rs, rowNum) -> getCity(rs)
+        );
+
+        return c;
+    }
+
+    @Override
     public List<City> getAll() {
         List<City> cities = jdbcTemplate.query(
                 "SELECT * FROM city",
