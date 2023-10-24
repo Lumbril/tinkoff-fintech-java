@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.InvocationTargetException;
-
 @Slf4j
 @Service
 public class WeatherAPIService {

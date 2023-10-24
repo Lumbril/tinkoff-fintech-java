@@ -1,19 +1,18 @@
 package org.example.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.example.entities.City;
 import org.example.repositories.CityRepository;
 import org.example.services.CityService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class CityServiceImpl implements CityService {
-    @Autowired
-    private CityRepository cityRepository;
+    private final CityRepository cityRepository;
 
     @Override
     public City create(City city) {
@@ -27,10 +26,7 @@ public class CityServiceImpl implements CityService {
 
     @Override
     public List<City> getAll() {
-        List<City> cities = new LinkedList<>();
-        Iterable<City> iterable = cityRepository.findAll();
-
-        iterable.forEach(cities::add);
+        List<City> cities = cityRepository.findAll();
 
         return cities;
     }
