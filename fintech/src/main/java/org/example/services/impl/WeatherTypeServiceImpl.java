@@ -1,19 +1,18 @@
 package org.example.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.example.entities.WeatherType;
 import org.example.repositories.WeatherTypeRepository;
 import org.example.services.WeatherTypeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class WeatherTypeServiceImpl implements WeatherTypeService {
-    @Autowired
-    private WeatherTypeRepository weatherTypeRepository;
+    private final WeatherTypeRepository weatherTypeRepository;
 
     @Override
     public WeatherType create(WeatherType weatherType) {
@@ -40,10 +39,7 @@ public class WeatherTypeServiceImpl implements WeatherTypeService {
 
     @Override
     public List<WeatherType> getAll() {
-        List<WeatherType> weatherTypes = new LinkedList<>();
-        Iterable<WeatherType> iterable = weatherTypeRepository.findAll();
-
-        iterable.forEach(weatherTypes::add);
+        List<WeatherType> weatherTypes = weatherTypeRepository.findAll();
 
         return weatherTypes;
     }

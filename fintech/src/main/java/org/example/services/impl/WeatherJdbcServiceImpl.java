@@ -1,10 +1,11 @@
 package org.example.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.example.entities.City;
 import org.example.entities.Weather;
 import org.example.entities.WeatherType;
 import org.example.services.WeatherService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -17,11 +18,12 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class WeatherJdbcServiceImpl implements WeatherService {
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Weather create(Weather weather) {
@@ -39,11 +41,8 @@ public class WeatherJdbcServiceImpl implements WeatherService {
         };
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
-
         jdbcTemplate.update(preparedStatementCreator, keyHolder);
-
         Long id = keyHolder.getKey().longValue();
-
         Weather weatherCreated = getById(id);
 
         return weatherCreated;
@@ -51,19 +50,23 @@ public class WeatherJdbcServiceImpl implements WeatherService {
 
     @Override
     public Weather getById(Long id) {
-        Weather weather = jdbcTemplate.queryForObject(
-                "SELECT w.id AS weather_id, w.temperature, w.date, " +
-                        "c.id AS city_id, c.city, " +
-                        "wt.id AS weather_type_id, wt.type " +
-                        "FROM weather AS w " +
-                        "LEFT JOIN city AS c ON w.city_id = c.id " +
-                        "LEFT JOIN weather_type AS wt ON w.weather_type_id = wt.id " +
-                        "WHERE w.id = (?)",
-                new Object[]{id},
-                (rs, rowNum) -> getWeather(rs)
-        );
+        try {
+            Weather weather = jdbcTemplate.queryForObject(
+                    "SELECT w.id AS weather_id, w.temperature, w.date, " +
+                            "c.id AS city_id, c.city, " +
+                            "wt.id AS weather_type_id, wt.type " +
+                            "FROM weather AS w " +
+                            "LEFT JOIN city AS c ON w.city_id = c.id " +
+                            "LEFT JOIN weather_type AS wt ON w.weather_type_id = wt.id " +
+                            "WHERE w.id = (?)",
+                    new Object[]{id},
+                    (rs, rowNum) -> getWeather(rs)
+            );
 
-        return weather;
+            return weather;
+        } catch (DataAccessException e) {
+            throw new NoSuchElementException("No value present");
+        }
     }
 
     @Override

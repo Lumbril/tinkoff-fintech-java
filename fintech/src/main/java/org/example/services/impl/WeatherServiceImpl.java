@@ -2,33 +2,25 @@ package org.example.services.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.example.entities.City;
+import lombok.RequiredArgsConstructor;
 import org.example.entities.Weather;
 import org.example.entities.WeatherType;
 import org.example.repositories.WeatherRepository;
 import org.example.services.WeatherService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class WeatherServiceImpl implements WeatherService {
-    private WeatherRepository weatherRepository;
+    private final WeatherRepository weatherRepository;
 
-    private CityServiceImpl cityService;
+    private final CityServiceImpl cityService;
 
-    private WeatherTypeServiceImpl weatherTypeService;
-
-    public WeatherServiceImpl(WeatherRepository weatherRepository,
-                              CityServiceImpl cityService,
-                              WeatherTypeServiceImpl weatherTypeService) {
-        this.weatherRepository = weatherRepository;
-        this.cityService = cityService;
-        this.weatherTypeService = weatherTypeService;
-    }
+    private final WeatherTypeServiceImpl weatherTypeService;
 
     @Override
     public Weather create(Weather weather) {
@@ -67,10 +59,7 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public List<Weather> getAll() {
-        List<Weather> weathers = new LinkedList<>();
-        Iterable<Weather> iterable = weatherRepository.findAll();
-
-        iterable.forEach(weathers::add);
+        List<Weather> weathers = weatherRepository.findAll();
 
         return weathers;
     }

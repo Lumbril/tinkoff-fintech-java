@@ -1,8 +1,10 @@
 package org.example.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.example.entities.WeatherType;
 import org.example.exceptions.TransactionException;
 import org.example.services.WeatherTypeService;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -15,18 +17,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    private TransactionTemplate transactionTemplate;
-
-    public WeatherTypeJdbcServiceImpl(JdbcTemplate jdbcTemplate,
-                                      TransactionTemplate transactionTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.transactionTemplate = transactionTemplate;
-    }
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     public WeatherType create(WeatherType weatherType) {
@@ -39,12 +37,10 @@ public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
 
             return ps;
         };
+
         KeyHolder keyHolder = new GeneratedKeyHolder();
-
         jdbcTemplate.update(preparedStatementCreator, keyHolder);
-
         Long id = keyHolder.getKey().longValue();
-
         WeatherType weatherTypeCreated = getById(id);
 
         return weatherTypeCreated;
@@ -52,13 +48,17 @@ public class WeatherTypeJdbcServiceImpl implements WeatherTypeService {
 
     @Override
     public WeatherType getById(Long id) {
-        WeatherType weatherType = jdbcTemplate.queryForObject(
-                "SELECT * FROM weather_type WHERE id = (?)",
-                new Object[]{id},
-                (rs, rowNum) -> getWeatherType(rs)
-        );
+        try {
+            WeatherType weatherType = jdbcTemplate.queryForObject(
+                    "SELECT * FROM weather_type WHERE id = (?)",
+                    new Object[]{id},
+                    (rs, rowNum) -> getWeatherType(rs)
+            );
 
-        return weatherType;
+            return weatherType;
+        } catch (DataAccessException e) {
+            throw new NoSuchElementException("No value present");
+        }
     }
 
     @Override
