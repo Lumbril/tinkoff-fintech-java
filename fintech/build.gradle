@@ -23,6 +23,8 @@ dependencies {
 
     implementation 'org.hibernate.orm:hibernate-core:6.2.6.Final'
 
+    implementation 'org.postgresql:postgresql:42.6.0'
+
     implementation 'org.liquibase:liquibase-core:4.20.0'
 
     implementation 'com.h2database:h2:2.1.214'
@@ -33,6 +35,9 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    testImplementation "org.testcontainers:postgresql:1.18.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.18.3"
 }
 
 jar {
