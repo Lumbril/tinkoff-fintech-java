@@ -22,7 +22,7 @@ public class WeatherAPIServiceTests {
         assertNotEquals(null, response.getTemperature());
     }
 
-    @Test()
+    @Test
     public void badCity() {
         WeatherAPIExceptions exception = assertThrows(WeatherAPIExceptions.class, () -> {
            WeatherTemperatureResponse response = weatherAPIService.get("NotExistsCity");

@@ -113,7 +113,7 @@ public class WeatherJdbcServiceImpl implements WeatherService {
         w.setDateTime(
                 LocalDateTime.parse(
                         rs.getString("date"),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.n")
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.nn")
                 )
         );
 
