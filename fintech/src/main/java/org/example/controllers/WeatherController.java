@@ -13,10 +13,12 @@ import org.example.dto.response.WeatherResponse;
 import org.example.dto.response.WeatherTemperatureResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,6 +62,7 @@ public class WeatherController {
                     }
             )
     })
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping(value = {"/{city}"})
     public ResponseEntity<?> doGet(@PathVariable String city) {
         return ResponseEntity.ok().body(
@@ -93,9 +96,11 @@ public class WeatherController {
                     }
             )
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(value = "/{city}")
     public ResponseEntity<?> doPost(@PathVariable String city,
-                                    @Validated @RequestBody WeatherRequest weatherRequest) {
+                                    @Validated @RequestBody WeatherRequest weatherRequest,
+                                    Principal principal) {
         Weather weather = new Weather(lastId++, city, weatherRequest.getTemperature(), weatherRequest.getDate());
         weatherList.add(weather);
 
@@ -125,6 +130,7 @@ public class WeatherController {
                     }
             )
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping(value = "/{city}")
     public ResponseEntity<?> doPut(@PathVariable String city,
                                    @Validated @RequestBody WeatherRequest weatherRequest) {
@@ -160,6 +166,7 @@ public class WeatherController {
                     }
             )
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{city}")
     public ResponseEntity<?> doDelete(@PathVariable String city) {
         List<Weather> weathersForRemove = weatherList.stream()
