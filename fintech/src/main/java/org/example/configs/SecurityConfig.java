@@ -20,6 +20,7 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -68,8 +69,9 @@ public class SecurityConfig {
                 )
                 .headers(headers -> headers.frameOptions(FrameOptionsConfig::disable))
                 .csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()).disable())
-                .formLogin(Customizer.withDefaults())
-                .logout(logout -> logout.logoutUrl("/logout").permitAll());
+                .formLogin(withDefaults())
+                .logout(logout -> logout.logoutUrl("/logout").permitAll())
+                .httpBasic(withDefaults());
 
         return http.build();
     }

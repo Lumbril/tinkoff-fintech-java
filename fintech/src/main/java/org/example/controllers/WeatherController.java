@@ -99,8 +99,7 @@ public class WeatherController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(value = "/{city}")
     public ResponseEntity<?> doPost(@PathVariable String city,
-                                    @Validated @RequestBody WeatherRequest weatherRequest,
-                                    Principal principal) {
+                                    @Validated @RequestBody WeatherRequest weatherRequest) {
         Weather weather = new Weather(lastId++, city, weatherRequest.getTemperature(), weatherRequest.getDate());
         weatherList.add(weather);
 
