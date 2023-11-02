@@ -65,7 +65,7 @@ public class SecurityConfig {
                         .requestMatchers(mvcRequestMatcher.pattern("/swagger/**")).permitAll()
                         .requestMatchers(mvcRequestMatcher.pattern("/v3/api-docs/**")).permitAll()
                         .requestMatchers(mvcRequestMatcher.pattern("/registration")).permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(FrameOptionsConfig::disable))
                 .csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()).disable())
