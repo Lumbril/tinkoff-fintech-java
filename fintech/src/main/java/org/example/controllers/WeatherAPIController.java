@@ -17,6 +17,7 @@ import org.example.exceptions.WeatherAPIExceptions;
 import org.example.services.WeatherAPIService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -74,6 +75,7 @@ public class WeatherAPIController {
                     }
             )
     })
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/current.json")
     public ResponseEntity<?> doGet(@RequestParam String city) {
         WeatherTemperatureResponse response = weatherAPIService.get(city);
