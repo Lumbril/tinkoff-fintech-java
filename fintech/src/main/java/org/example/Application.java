@@ -3,6 +3,7 @@ package org.example;
 import org.example.entities.City;
 import org.example.entities.Weather;
 import org.example.entities.WeatherType;
+import org.example.services.CacheService;
 import org.example.services.CityService;
 import org.example.services.WeatherService;
 import org.example.services.WeatherTypeService;
@@ -32,7 +33,7 @@ public class Application {
         };
     }
 
-    @Bean
+    //@Bean
     public CommandLineRunner testJdbc(WeatherTypeJdbcServiceImpl weatherTypeService,
                                       CityJdbcServiceImpl cityService,
                                       WeatherJdbcServiceImpl weatherService) {

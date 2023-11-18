@@ -70,6 +70,11 @@ public class WeatherJdbcServiceImpl implements WeatherService {
     }
 
     @Override
+    public Weather getByCity(String city) {
+        return null;
+    }
+
+    @Override
     public List<Weather> getAll() {
         List<Weather> weathers = jdbcTemplate.query(
                 "SELECT w.id AS weather_id, w.temperature, w.date, " +

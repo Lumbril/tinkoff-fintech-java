@@ -9,7 +9,8 @@ import org.example.repositories.WeatherRepository;
 import org.example.services.WeatherService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -44,7 +45,8 @@ public class WeatherServiceImpl implements WeatherService {
 
         Weather w = Weather.builder()
                 .temperature(Double.valueOf(String.valueOf(jsonNode.get("current").get("temp_c"))))
-                .dateTime(LocalDateTime.now())
+                .dateTime(Instant.ofEpochSecond(Long.valueOf(jsonNode.get("current").get("last_updated_epoch").toString()))
+                        .atZone(ZoneId.of("UTC")).toLocalDateTime())
                 .weatherType(wt)
                 .city(c)
                 .build();
@@ -55,6 +57,11 @@ public class WeatherServiceImpl implements WeatherService {
     @Override
     public Weather getById(Long id) {
         return weatherRepository.findById(id).orElseThrow();
+    }
+
+    @Override
+    public Weather getByCity(String city) {
+        return weatherRepository.findByCity_City(city).orElse(null);
     }
 
     @Override
