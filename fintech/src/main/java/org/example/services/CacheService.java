@@ -23,4 +23,8 @@ public class CacheService {
     public Weather update(String key, Weather newWeather) {
         return CACHE.update(key, newWeather);
     }
+
+    public void remove(String key) {
+        CACHE.remove(key);
+    }
 }

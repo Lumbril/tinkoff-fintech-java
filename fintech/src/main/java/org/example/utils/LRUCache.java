@@ -28,4 +28,8 @@ public class LRUCache<K, V> {
     public V update(K key, V newValue) {
         return cache.put(key, newValue);
     }
+
+    public void remove(K key) {
+        cache.remove(key);
+    }
 }
