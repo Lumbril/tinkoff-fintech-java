@@ -49,6 +49,11 @@ public class WeatherJdbcServiceImpl implements WeatherService {
     }
 
     @Override
+    public Weather createIfNewDate(Weather weather) {
+        return null;
+    }
+
+    @Override
     public Weather getById(Long id) {
         try {
             Weather weather = jdbcTemplate.queryForObject(
@@ -87,6 +92,11 @@ public class WeatherJdbcServiceImpl implements WeatherService {
         );
 
         return weathers;
+    }
+
+    @Override
+    public List<Weather> getTop30ByDate(String city) {
+        return null;
     }
 
     @Override

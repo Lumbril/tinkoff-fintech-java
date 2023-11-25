@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,17 @@ public class WeatherServiceImpl implements WeatherService {
     @Override
     public Weather create(Weather weather) {
         return weatherRepository.save(weather);
+    }
+
+    @Override
+    public Weather createIfNewDate(Weather weather) {
+        Optional<Weather> w = weatherRepository.findByCity_CityAndDateTime(weather.getCity().getCity(), weather.getDateTime());
+
+        if (w.isPresent()) {
+            return null;
+        } else {
+            return create(weather);
+        }
     }
 
     public Weather createFromJsonNode(JsonNode jsonNode) {
@@ -69,6 +81,11 @@ public class WeatherServiceImpl implements WeatherService {
         List<Weather> weathers = weatherRepository.findAll();
 
         return weathers;
+    }
+
+    @Override
+    public List<Weather> getTop30ByDate(String city) {
+        return weatherRepository.findTop30ByCity_CityOrderByDateTimeDesc(city);
     }
 
     @Override

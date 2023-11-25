@@ -1,12 +1,13 @@
 package org.example.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class WeatherDto {
     private String city;
     private String type;
