@@ -48,7 +48,7 @@ public class WeatherApiSchedulerConfig implements SchedulingConfigurer {
             weatherProducer.send(weatherDto);
             System.out.println(Thread.currentThread().getName() + " " + city + " " + new Date() + " : " + weatherDto);
         }, triggerContext -> {
-            String cronExp = "*/5 * * * * ?";
+            String cronExp = "0 * * * * ?";
 
             return new CronTrigger(cronExp).nextExecution(triggerContext);
         });

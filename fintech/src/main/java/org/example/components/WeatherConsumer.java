@@ -22,8 +22,6 @@ public class WeatherConsumer {
 
     @KafkaListener(topics = "weather-topic", groupId = "weather-group")
     public void listenWeatherDto(WeatherDto weatherDto) {
-        log.info(weatherDto.toString());
-
         weatherService.createIfNewDate(Weather.builder()
                         .city(cityService.getByCityOrCreate(weatherDto.getCity()))
                         .weatherType(weatherTypeService.getByTypeOrCreate(weatherDto.getType()))
