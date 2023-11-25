@@ -7,6 +7,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ErrorResponseWeatherAPI;
+import org.example.dto.WeatherDto;
 import org.example.dto.response.WeatherTemperatureResponse;
 import org.example.entities.City;
 import org.example.entities.Weather;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
@@ -75,7 +78,66 @@ public class WeatherAPIService {
     }
 
     private Weather getFromWeatherApi(String city) {
-        ResponseEntity<?> responseFromWeatherApi = weatherWebClient
+        ResponseEntity<?> responseFromWeatherApi = getRequestToWeatherAPI(city);
+
+        String jsonStr = (String) responseFromWeatherApi.getBody();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            JsonNode jsonNode = mapper.readTree(jsonStr);
+
+            Weather w = weatherService.createFromJsonNode(jsonNode);
+
+            return w;
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+
+            throw new JsonException("Error in processing Json parsing");
+        }
+    }
+
+    public WeatherDto getWeatherDto(String city) {
+        ResponseEntity<?> responseFromWeatherApi = getRequestToWeatherAPI(city);
+
+        String jsonStr = (String) responseFromWeatherApi.getBody();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            JsonNode jsonNode = mapper.readTree(jsonStr);
+
+            WeatherDto w = WeatherDto.builder()
+                    .city(jsonNode.get("location").get("name")
+                            .toString()
+                            .replaceAll("\"", ""))
+                    .type(jsonNode
+                            .get("current")
+                            .get("condition")
+                            .get("text")
+                            .toString()
+                            .replaceAll("\"", ""))
+                    .temperature(Double.valueOf(String.valueOf(jsonNode.get("current").get("temp_c"))))
+                    .dateTime(Instant.ofEpochSecond(
+                            Long.valueOf(
+                                    jsonNode
+                                            .get("current")
+                                            .get("last_updated_epoch")
+                                            .toString()
+                            )
+                    ).atZone(
+                            ZoneId.of("UTC")
+                    ).toLocalDateTime())
+                    .build();
+
+            return w;
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+
+            throw new JsonException("Error in processing Json parsing");
+        }
+    }
+
+    private ResponseEntity<?> getRequestToWeatherAPI(String city) {
+        return weatherWebClient
                 .get()
                 .uri(uriBuilder -> uriBuilder
                         .path("")
@@ -98,20 +160,5 @@ public class WeatherAPIService {
                 .toEntity(String.class)
                 .transformDeferred(RateLimiterOperator.of(rateLimiter))
                 .block();
-
-        String jsonStr = (String) responseFromWeatherApi.getBody();
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            JsonNode jsonNode = mapper.readTree(jsonStr);
-
-            Weather w = weatherService.createFromJsonNode(jsonNode);
-
-            return w;
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
-
-            throw new JsonException("Error in processing Json parsing");
-        }
     }
 }
