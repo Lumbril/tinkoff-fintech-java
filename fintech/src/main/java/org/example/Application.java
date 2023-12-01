@@ -32,7 +32,7 @@ public class Application {
         };
     }
 
-    @Bean
+    //@Bean
     public CommandLineRunner testJdbc(WeatherTypeJdbcServiceImpl weatherTypeService,
                                       CityJdbcServiceImpl cityService,
                                       WeatherJdbcServiceImpl weatherService) {

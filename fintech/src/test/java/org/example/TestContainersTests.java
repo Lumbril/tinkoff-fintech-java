@@ -5,15 +5,21 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.example.entities.WeatherType;
+import org.example.repositories.WeatherTypeRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -25,6 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestContainersTests extends ApplicationTests {
     private static final String DATABASE_NAME = "test-db";
 
+    @Autowired
+    private WeatherTypeRepository weatherTypeRepository;
+
     @Container
     public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:13")
             .withReuse(true)
@@ -32,9 +41,28 @@ public class TestContainersTests extends ApplicationTests {
             .withPassword("pass")
             .withDatabaseName(DATABASE_NAME);
 
+    @DynamicPropertySource
+    static void setupProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+        registry.add("spring.datasource.driver-class-name", postgreSQLContainer::getDriverClassName);
+    }
+
     @BeforeAll
-    public static void setup() {
+    public static void setup() throws SQLException, LiquibaseException {
         postgreSQLContainer.start();
+
+        DataSource dataSource = DataSourceBuilder.create()
+                .url(postgreSQLContainer.getJdbcUrl())
+                .username(postgreSQLContainer.getUsername())
+                .password(postgreSQLContainer.getPassword())
+                .build();
+
+        Liquibase liquibase = new Liquibase("changelog/changelog-master.xml",
+                new ClassLoaderResourceAccessor(), new JdbcConnection(dataSource.getConnection()));
+
+        liquibase.update();
     }
 
     @AfterAll
@@ -48,34 +76,8 @@ public class TestContainersTests extends ApplicationTests {
     }
 
     @Test
-    public void testMigrations() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl("jdbc:postgresql://localhost:" + postgreSQLContainer.getMappedPort(5432) + "/" + DATABASE_NAME);
-        dataSource.setUsername("test");
-        dataSource.setPassword("pass");
-
-        try (Connection connection = dataSource.getConnection()) {
-            Liquibase liquibase = new Liquibase("changelog/changelog-master.xml",
-                    new ClassLoaderResourceAccessor(), new JdbcConnection(connection));
-
-            liquibase.update();
-
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-
-            List<WeatherType> weatherTypes = jdbcTemplate.query(
-                    "SELECT * FROM weather_type",
-                    (rs, rowNum) -> WeatherType.builder()
-                            .id(rs.getLong("id"))
-                            .type(rs.getString("type"))
-                            .build()
-            );
-
-            assertEquals(5, weatherTypes.size());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (LiquibaseException e) {
-            throw new RuntimeException(e);
-        }
+    public void testGetWeatherTypeAfterMigration() {
+        WeatherType weatherType = weatherTypeRepository.findById(1L).get();
+        assertEquals("Ясно", weatherType.getType());
     }
 }
