@@ -8,16 +8,20 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ErrorResponseWeatherAPI;
 import org.example.dto.response.WeatherTemperatureResponse;
+import org.example.entities.City;
+import org.example.entities.Weather;
+import org.example.entities.WeatherType;
 import org.example.exceptions.JsonException;
 import org.example.exceptions.WeatherAPIExceptions;
+import org.example.services.impl.CityServiceImpl;
+import org.example.services.impl.WeatherServiceImpl;
+import org.example.services.impl.WeatherTypeServiceImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.lang.reflect.InvocationTargetException;
 
 @Slf4j
 @Service
@@ -29,10 +33,14 @@ public class WeatherAPIService {
 
     private RateLimiter rateLimiter;
 
+    private WeatherServiceImpl weatherService;
+
     public WeatherAPIService(@Qualifier("weatherapi") WebClient webClient,
-                             @Qualifier("ratelimiterWeatherapi") RateLimiter rateLimiter) {
+                             @Qualifier("ratelimiterWeatherapi") RateLimiter rateLimiter,
+                             WeatherServiceImpl weatherService) {
         this.weatherWebClient = webClient;
         this.rateLimiter = rateLimiter;
+        this.weatherService = weatherService;
     }
 
     public WeatherTemperatureResponse get(String city) {
@@ -66,8 +74,11 @@ public class WeatherAPIService {
 
         try {
             JsonNode jsonNode = mapper.readTree(jsonStr);
+
+            Weather w = weatherService.createFromJsonNode(jsonNode);
+
             response = WeatherTemperatureResponse.builder()
-                    .temperature(Double.valueOf(String.valueOf(jsonNode.get("current").get("temp_c"))))
+                    .temperature(w.getTemperature())
                     .build();
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
